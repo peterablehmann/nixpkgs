@@ -7,21 +7,8 @@ let
 in {
   options = {
     services.renovate = {
-      enable = lib.mkOption {
-        default = false;
-        type = lib.types.bool;
-        description = lib.mdDoc ''
-          Enables the renovate service
-        '';
-      };
-      package = lib.mkOption {
-        default = pkgs.renovate;
-        type = lib.types.package;
-        description = lib.mdDoc ''
-          The renovate package to use.
-        '';
-        defaultText = lib.literalExpression "pkgs.renovate";
-      };
+      enable = mkEnableOption (lib.mdDoc "Renovatebot");
+
       config = lib.mkOption {
         default = null;
         type = settingsFormat.type;
@@ -34,11 +21,11 @@ in {
   };
 
   config = lib.mkIf cfg.enable {
-    systemd.user.services.renovate = {
+    systemd.services.renovate = {
       description = "renovate service";
       environment = { RENOVATE_CONFIG_FILE = configFile };
       serviceConfig = {
-        ExecStart = "${cfg.package}/bin/renovate";
+        ExecStart = "${pkgs.renovate}/bin/renovate";
         PrivateTmp = true;
         ProtectSystem = "strict";
         ProtectHome = "read-only";
