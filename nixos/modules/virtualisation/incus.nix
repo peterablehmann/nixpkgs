@@ -176,6 +176,15 @@ in
 
       package = lib.mkPackageOption pkgs "incus-lts" { };
 
+      extraArgs = mkOption {
+        description = ''
+          Extra arguments passed to incusd";
+        '';
+        type = types.listOf types.str;
+        default = [ ];
+        example = [ "--debug" ];
+      };
+
       lxcPackage = lib.mkOption {
         type = lib.types.package;
         default = config.virtualisation.lxc.package;
@@ -358,7 +367,15 @@ in
       wants = [ "network-online.target" ];
 
       serviceConfig = {
-        ExecStart = "${cfg.package}/bin/incusd --group incus-admin";
+        ExecStart = escapeSystemdExecArgs (
+          [
+            "${cfg.package}/bin/incusd"
+          ]
+          ++ [
+            "--group incus-admin"
+          ]
+          ++ cfg.extraArgs
+        );
         ExecStartPost = "${cfg.package}/bin/incusd waitready --timeout=${cfg.startTimeout}";
         ExecStop = lib.optionalString (!cfg.softDaemonRestart) "${cfg.package}/bin/incus admin shutdown";
 
